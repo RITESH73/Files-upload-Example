@@ -63,8 +63,7 @@ var express = require('express');
           }]
         }     
     });
- var dictionary = dic();
-var Comment = new Schema({
+ var Comment = new Schema({
   fileData: { type: JSON },
   date: { type: Date, required:true, default:Date.now}
 });
@@ -193,6 +192,100 @@ app.post('/udpatepartofspeech', function(req, res) {
                         return res.json({error_code:1,err_desc:err, data: null});
                     } 
                     console.log("result: ", result);
+                    var counter = 0,
+                    counter2=0;
+                    var tmpObjects = {},
+                    wordList = [];
+                    for(var i=0; i<result.length; i++){
+                        if(tmpObjects[result[i].word] == undefined){
+                            tmpObjects[result[i].word] = {};
+                        }
+                    }
+
+                    for(var prop in tmpObjects){
+                        console.log("prop: ", prop)
+                        counter++;
+                        dic.findOne({"word": prop},function(err, found){
+                            if(err){
+                               console.log("error in foundone");
+                                counter--; 
+                            }
+                            if(found == null || found.length == 0){
+                                counter--;
+                            }else{
+                                console.log(found.word)
+                                for(var i=0; i< result.length; i++){
+                                    if(result[i].word == found.word){
+                                        console.log("loop word: ", result[i].word);
+                                        console.log("prop: ", prop);
+                                        found[result[i].partofspeech].ifo.push({definition : result[i].definition, example: result[i].example});
+                                    }
+                                }
+
+                                dic.update({ "_id": found._id}, found, function(err, result2){
+                                    counter--;
+                                    if(err){
+                                        console.log("error: ", err);
+                                        res.send('err in update');
+                                    }
+
+                                    if(counter == 0){
+                                        res.json({"message":"success"});
+                                    }
+                                });
+                            }
+                            if(counter == 0){
+                                res.json({"message":"success"});
+                            }       
+                        });
+                    }
+                    
+                    console.log("word List: ", tmpObjects);
+                    console.log("word List: ", tmpObjects.length);
+                    //res.send("working");
+                });
+            } catch (e){
+                res.json({error_code:1,err_desc:"Corupted excel file"});
+            }
+        })    
+});
+
+app.post('/udpateSynonyms', function(req, res) {      // uploadSynonyms
+    var exceltojson;
+        upload(req,res,function(err){
+            if(err){
+                 res.json({error_code:1,err_desc:err});
+                 return;
+            }
+            /** Multer gives us file info in req.file object */
+            if(!req.file){
+                res.json({error_code:1,err_desc:"No file passed"});
+                return;
+            }
+            /** Check the extension of the incoming file and 
+             *  use the appropriate module
+             */
+            if(req.file.originalname.split('.')[req.file.originalname.split('.').length-1] === 'xlsx'){
+                exceltojson = xlsxtojson;
+            } else {
+                exceltojson = xlstojson;
+            }
+            console.log(req.file.path);
+            
+            console.log('exceltojson')
+            console.log(exceltojson)
+            
+            
+            try {
+                exceltojson({
+                    input: req.file.path,
+                    output: null, //since we don't need output.json
+                    lowerCaseHeaders:true
+                }, function(err,result){
+                    if(err) {
+                        return res.json({error_code:1,err_desc:err, data: null});
+                    } 
+                    console.log("result: ", result);
                     var counter = 0;
                     var tmpObjects = {},
                     wordList = [];
@@ -208,28 +301,35 @@ app.post('/udpatepartofspeech', function(req, res) {
                             if(err){
                                console.log("error in foundone");
                                 counter--;
-                                res.send('err');
                             }
-                            console.log(found.word)
-                            for(var i=0; i< result.length; i++){
-                                if(result[i].word == prop){
-                                    console.log("loop word: ", result[i].word);
-                                    console.log("prop: ", prop);
-                                    found[result[i].partofspeech].ifo.push({definition : result[i].definition, example: result[i].example});
-                                }
-                            }
-
-                            dic.update({ "_id": found._id}, found, function(err, result2){
+                            if(found == null || found.length == 0){
                                 counter--;
-                                if(err){
-                                    console.log("error: ", err);
-                                    res.send('err in update');
+                            }else{
+                                console.log(found.word)
+                                for(var i=0; i< result.length; i++){
+                                    if(result[i].word == found.word){
+                                        console.log("loop word: ", result[i].word);
+                                        console.log("prop: ", prop);
+                                        found[result[i].partofspeech].Synonyms.push({value : result[i].synonyms});
+                                    }
                                 }
 
-                                if(counter == 0){
-                                    res.json({"message":"success"});
-                                }
-                            });       
+                                dic.update({ "_id": found._id}, found, function(err, result2){
+                                    counter--;
+                                    if(err){
+                                        console.log("error: ", err);
+                                        res.send('err in update');
+                                    }
+
+                                    if(counter == 0){
+                                        res.json({"message":"success"});
+                                    }
+                                });
+                            }
+                            if(counter == 0){
+                                res.json({"message":"success"});
+                            }
+                                   
                         });
                     }
                     
@@ -242,6 +342,100 @@ app.post('/udpatepartofspeech', function(req, res) {
             }
         })    
 });
+
+app.post('/udpateAntonyms', function(req, res) {      // uploadSynonyms
+    var exceltojson;
+        upload(req,res,function(err){
+            if(err){
+                 res.json({error_code:1,err_desc:err});
+                 return;
+            }
+            /** Multer gives us file info in req.file object */
+            if(!req.file){
+                res.json({error_code:1,err_desc:"No file passed"});
+                return;
+            }
+            /** Check the extension of the incoming file and 
+             *  use the appropriate module
+             */
+            if(req.file.originalname.split('.')[req.file.originalname.split('.').length-1] === 'xlsx'){
+                exceltojson = xlsxtojson;
+            } else {
+                exceltojson = xlstojson;
+            }
+            console.log(req.file.path);
+            
+            console.log('exceltojson')
+            console.log(exceltojson)
+            
+            
+            try {
+                exceltojson({
+                    input: req.file.path,
+                    output: null, //since we don't need output.json
+                    lowerCaseHeaders:true
+                }, function(err,result){
+                    if(err) {
+                        return res.json({error_code:1,err_desc:err, data: null});
+                    } 
+                    console.log("result: ", result);
+                    var counter = 0;
+                    var tmpObjects = {},
+                    wordList = [];
+                    for(var i=0; i<result.length; i++){
+                        if(tmpObjects[result[i].word] == undefined){
+                            tmpObjects[result[i].word] = {};
+                        }
+                    }
+                    for(var prop in tmpObjects){
+                        console.log("prop: ", prop)
+                        counter++;
+                        dic.findOne({"word": prop},function(err, found){
+                            if(err){
+                               console.log("error in foundone");
+                                counter--;
+                            }
+                            if(found == null || found.length == 0){
+                                counter--;
+                            }else{
+                                console.log(found.word)
+                                for(var i=0; i< result.length; i++){
+                                    if(result[i].word == found.word){
+                                        console.log("loop word: ", result[i].word);
+                                        console.log("prop: ", prop);
+                                        found[result[i].partofspeech].Antonyms.push({value : result[i].antonyms});
+                                    }
+                                }
+
+                                dic.update({ "_id": found._id}, found, function(err, result2){
+                                    counter--;
+                                    if(err){
+                                        console.log("error: ", err);
+                                        res.send('err in update');
+                                    }
+
+                                    if(counter == 0){
+                                        res.json({"message":"success"});
+                                    }
+                                });
+                            }
+                            if(counter == 0){
+                                res.json({"message":"success"});
+                            }
+                                   
+                        });
+                    }
+                    
+                    console.log("word List: ", tmpObjects);
+                    console.log("word List: ", tmpObjects.length);
+                    //res.send("working");
+                });
+            } catch (e){
+                res.json({error_code:1,err_desc:"Corupted excel file"});
+            }
+        })    
+});
+
 
 app.listen('3000', function(){
     console.log('running on 3000...');
