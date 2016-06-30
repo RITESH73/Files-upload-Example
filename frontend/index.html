@@ -1,29 +1,72 @@
 <!DOCTYPE html>
 <html lang="en-US">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
 <script src="ng-file-upload-shim.min.js"></script> <!-- for no html5 browsers support -->
 <script src="ng-file-upload.min.js"></script>
 <script type="text/javascript" src="main.js"></script>
 <body>
+<div class="container" style="width:35%; margin-left:15%;">
 <body ng-app="fileUpload">
-        <h1>Angular Node File Upload</h1>
+        <h3>Upload words</h3>
         <form  ng-controller="MyCtrl as up" name="up.upload_form">
-                Single Image with validations
+            <input 
+               type="file" 
+               ngf-select 
+               ng-model="up.file" 
+               name="file"  
+               /><br>
+            <button type="submit" ng-click="up.submit()">submit</button>
+            <p>{{up.progress}}
+        </form>
+
+<br/>
+<hr>
+<h3>Add part of speech</h3>
+        <form  ng-controller="MyCtrl as up" name="up.upload_form">
             <input 
                type="file" 
                ngf-select 
                ng-model="up.file" 
                name="file" 
-               
-               ngf-max-size="20MB" 
-               />
-            Image thumbnail: <img style="width:100px;" ngf-thumbnail="up.file || '/thumb.jpg'"/>
-            <i ng-show="up.upload_form.file.$error.required">*required</i><br>
-            <i ng-show="up.upload_form.file.$error.maxSize">File too large 
-            {{up.file.size / 1000000|number:1}}MB: max 20M</i>
-            <button type="submit" ng-click="up.submit()">submit</button>
+               /><br>
+            
+            <button type="submit" ng-click="up.submitps()">submit</button>
             <p>{{up.progress}}
         </form>
+          <br/>
+          <hr>
+  <h3>Add Synonyms</h3>
+        <form  ng-controller="MyCtrl as up" name="up.upload_form">
+            <input 
+               type="file" 
+               ngf-select 
+               ng-model="up.file" 
+               name="file" 
+               /><br>
+            
+            <button type="submit" ng-click="up.submitsyn()">submit</button>
+            <p>{{up.progress}}
+        </form>
+        <br/>
+        <hr>
+  <h3>Add Antonyms</h3>
+        <form  ng-controller="MyCtrl as up" name="up.upload_form">
+            <input 
+               type="file" 
+               ngf-select 
+               ng-model="up.file" 
+               name="file" 
+               /><br>
+            
+            <button type="submit" ng-click="up.submitanto()">submit</button>
+            <p>{{up.progress}}
+        </form>            
+
+</div>
     </body>
 
 </body>
